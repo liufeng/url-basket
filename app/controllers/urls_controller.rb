@@ -43,19 +43,7 @@ class UrlsController < ApplicationController
   # POST /urls.json
   def create
     @url = Url.new(params[:url])
-
-    logger.debug "New url: #{@url.attributes.inspect}"
-
-    if @url.title.empty?
-      URI.parse(@url.url).open do |html|
-        html.each do |line|
-          if md = (/<title>\s*(.*)\s*<\/title>/iu).match(line.force_encoding('utf-8'))
-            logger.debug "md[1] = #{md[1]}"
-            @url.title = md[1]
-          end
-        end
-      end
-    end
+    @url.title = get_page_title(@url.url) if @url.title.empty?
     
     respond_to do |format|
       if @url.save
@@ -72,6 +60,7 @@ class UrlsController < ApplicationController
   # PUT /urls/1.json
   def update
     @url = Url.find(params[:id])
+    @url.title = get_page_title(@url.url) if @url.title.empty?
 
     respond_to do |format|
       if @url.update_attributes(params[:url])
@@ -93,6 +82,19 @@ class UrlsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to urls_url }
       format.json { head :no_content }
+    end
+  end
+  
+  private
+  def get_page_title(url)
+    return nil if url.empty?
+    URI.parse(url).open do |html|
+      html.each do |line|
+        if md = (/<title>\s*(.*)\s*<\/title>/iu).match(line.force_encoding('utf-8'))
+          logger.debug "md[1] = #{md[1]}"
+          return "#{md[1]}"
+        end
+      end
     end
   end
 end
