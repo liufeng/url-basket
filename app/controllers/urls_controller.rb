@@ -1,3 +1,5 @@
+require 'open-uri'
+
 class UrlsController < ApplicationController
   # GET /urls
   # GET /urls.json
@@ -42,6 +44,19 @@ class UrlsController < ApplicationController
   def create
     @url = Url.new(params[:url])
 
+    logger.debug "New url: #{@url.attributes.inspect}"
+
+    if @url.title.empty?
+      URI.parse(@url.url).open do |html|
+        html.each do |line|
+          if md = (/<title>\s*(.*)\s*<\/title>/iu).match(line.force_encoding('utf-8'))
+            logger.debug "md[1] = #{md[1]}"
+            @url.title = md[1]
+          end
+        end
+      end
+    end
+    
     respond_to do |format|
       if @url.save
         format.html { redirect_to @url, notice: 'Url was successfully created.' }
