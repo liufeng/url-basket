@@ -1,3 +1,4 @@
+require 'nokogiri'
 require 'open-uri'
 
 class UrlsController < ApplicationController
@@ -88,13 +89,9 @@ class UrlsController < ApplicationController
   private
   def get_page_title(url)
     return nil if url.empty?
-    URI.parse(url).open do |html|
-      html.each do |line|
-        if md = (/<title>\s*(.*)\s*<\/title>/iu).match(line.force_encoding('utf-8'))
-          logger.debug "md[1] = #{md[1]}"
-          return "#{md[1]}"
-        end
-      end
-    end
+    doc = Nokogiri::HTML(open(url))
+    title = doc.xpath("//title").text.strip
+    logger.debug "title = #{title}"
+    return title
   end
 end
