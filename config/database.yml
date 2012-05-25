@@ -19,7 +19,8 @@ test:
   timeout: 5000
 
 production:
-  adapter: mysql
-  database: CLEARDB_DATABASE_URL
-  username: a73a354aec794c
-  password: 49c73ffb
+  adapter: postgresql
+  database: url_basket
+  host: localhost
+  username: liufeng
+  password: 
